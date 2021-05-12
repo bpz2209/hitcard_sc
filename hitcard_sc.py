@@ -61,7 +61,7 @@ def codeinput (driver):
     return code
 
 
-def fill_select (driver):
+def fill_select (driver,vaccine):
     driver.find_element_by_xpath('//*[@id="form"]/div[2]/div[1]/div[6]/label[2]/div[1]/p').click()
     driver.find_element_by_xpath('//*[@id="form"]/div[2]/div[1]/div[8]/label[2]/div[1]/p').click()
     driver.find_element_by_xpath('//*[@id="form"]/div[2]/div[1]/div[10]/label[2]/div[1]/p').click()
@@ -71,7 +71,12 @@ def fill_select (driver):
     driver.find_element_by_xpath('//*[@id="form"]/div[2]/div[1]/div[24]/label[2]/div[1]/p').click()
     driver.find_element_by_xpath('//*[@id="form"]/div[2]/div[1]/div[26]/label[2]/div[1]/p').click()
     driver.find_element_by_xpath('//*[@id="form"]/div[2]/div[1]/div[29]/label[5]/div[1]/p').click()
-    driver.find_element_by_xpath('//*[@id="vaccination"]/div[2]/label[2]/div[1]/p').click()
+    if vaccine == 1:
+        driver.find_element_by_xpath('//*[@id="vaccination"]/div[2]/label[2]/div[1]/p').click()
+    elif vaccine==0:
+        driver.find_element_by_xpath('//*[@id="vaccination"]/div[2]/label[3]/div[1]/p').click()
+    elif vaccine ==2:
+        driver.find_element_by_xpath('//*[@id="vaccination"]/div[2]/label[1]/div[1]/p').click()
 
     driver.find_element_by_xpath('//*[@id="submit"]').click()
     driver.get_screenshot_as_file('result.png')
@@ -79,7 +84,7 @@ def fill_select (driver):
     driver.find_element_by_xpath('//*[@id="cofirmSubmit"]').click()
 
 
-def login (driver, username, password, login_url):
+def login (driver, username, password, vaccine, login_url):
     element = driver.find_element_by_class_name('user-login')
     driver.execute_script("arguments[0].click();", element)
     driver.find_element_by_id('username').click()
@@ -107,7 +112,7 @@ def login (driver, username, password, login_url):
     except:
         if driver.find_elements_by_class_name('error_icon') == []:
             print('登入成功')
-            fill_select(driver)
+            fill_select(driver,vaccine)
 
         else:
             print('trying again')
@@ -117,7 +122,7 @@ def login (driver, username, password, login_url):
             time.sleep(1)
 
 
-def main (username, password):
+def main (username, password, vaccine):
     chrome_options = webdriver.ChromeOptions()
     chrome_options.add_argument('--headless')
     chrome_options.add_argument('--disable-gpu')
@@ -125,7 +130,7 @@ def main (username, password):
     driver = webdriver.Chrome(chrome_options=chrome_options)  # 如果没有把chromedriver加入到PATH中，就需要指明路径
     login_url = 'https://login.sufe.edu.cn/cas/login?service=http%3A%2F%2Fstu.sufe.edu.cn%2Fstu%2Fsso%2Flogin%3FSsoClientServiceURI%3DaHR0cDovL3N0dS5zdWZlLmVkdS5jbi9zdHUvbmNwL25jcEluZGV4LmpzcA%3D%3D'
     driver.get(login_url)
-    login(driver, username, password, login_url)
+    login(driver, username, password, vaccine, login_url)
 
 
 if __name__ == '__main__':
@@ -137,6 +142,7 @@ if __name__ == '__main__':
         password = configs["password"]
         hour = configs["hour"]
         minute = configs["minute"]
+        vaccine = configs['vaccine']
 
     else:
         msg = dict()
@@ -149,13 +155,15 @@ if __name__ == '__main__':
         minute = input("\tminute: ") or 5
         msg['hour'] = hour
         msg['minute'] = minute
+        vaccine = input('\t接种针数{ 未接种:0, 接种一针:1, 两针:2}')
+        msg['vaccine'] = vaccine
         with open('./config.json', 'w') as file:
             json.dump(msg, file)
     main(username, password)
     print("\n[Time] %s\n" % datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
     print(" 打卡任务启动 ")
     scheduler = BlockingScheduler()
-    scheduler.add_job(main, 'cron', args=[username, password], hour=hour, minute=minute)
+    scheduler.add_job(main, 'cron', args=[username, password, vaccine], hour=hour, minute=minute)
     print('⏰ 已启动定时打卡服务，每天 %02d:%02d 为您打卡' % (int(hour), int(minute)))
     try:
         scheduler.start()
