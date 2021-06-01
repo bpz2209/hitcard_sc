@@ -62,27 +62,45 @@ def codeinput (driver):
 
 
 def fill_select (driver,vaccine):
-    driver.find_element_by_xpath('//*[@id="form"]/div[2]/div[1]/div[6]/label[2]/div[1]/p').click()
-    driver.find_element_by_xpath('//*[@id="form"]/div[2]/div[1]/div[8]/label[2]/div[1]/p').click()
-    driver.find_element_by_xpath('//*[@id="form"]/div[2]/div[1]/div[10]/label[2]/div[1]/p').click()
-    driver.find_element_by_xpath('//*[@id="form"]/div[2]/div[1]/div[14]/label[1]/div[1]/p').click()
-    driver.find_element_by_xpath('//*[@id="form"]/div[2]/div[1]/div[19]/label[2]/div[1]/p').click()
-    driver.find_element_by_xpath('//*[@id="form"]/div[2]/div[1]/div[21]/label[2]/div[1]/p').click()
-    driver.find_element_by_xpath('//*[@id="form"]/div[2]/div[1]/div[24]/label[2]/div[1]/p').click()
-    driver.find_element_by_xpath('//*[@id="form"]/div[2]/div[1]/div[26]/label[2]/div[1]/p').click()
-    driver.find_element_by_xpath('//*[@id="form"]/div[2]/div[1]/div[29]/label[5]/div[1]/p').click()
-    if vaccine == 1:
-        driver.find_element_by_xpath('//*[@id="vaccination"]/div[2]/label[2]/div[1]/p').click()
-    elif vaccine==0:
-        driver.find_element_by_xpath('//*[@id="vaccination"]/div[2]/label[3]/div[1]/p').click()
-    elif vaccine ==2:
-        driver.find_element_by_xpath('//*[@id="vaccination"]/div[2]/label[1]/div[1]/p').click()
-
-    driver.find_element_by_xpath('//*[@id="submit"]').click()
-    driver.get_screenshot_as_file('result.png')
+    try:
+        driver.find_element_by_xpath('/html/body/div[2]/div/article/section/div[2]/div/a').click()
+    except:
+        pass
     time.sleep(1)
-    driver.find_element_by_xpath('//*[@id="cofirmSubmit"]').click()
+    try:
+        alertObject = driver.switch_to.alert
+        alertObject.accept()
+    except:
+        pass
+    driver.get_screenshot_as_file('test.png')
+    try:
+        driver.find_element_by_xpath('//*[@id="form"]/div[2]/div[1]/div[6]/label[2]/div[1]/p').click()
+        driver.find_element_by_xpath('//*[@id="form"]/div[2]/div[1]/div[8]/label[2]/div[1]/p').click()
+        driver.find_element_by_xpath('//*[@id="form"]/div[2]/div[1]/div[10]/label[2]/div[1]/p').click()
+        driver.find_element_by_xpath('//*[@id="form"]/div[2]/div[1]/div[14]/label[1]/div[1]/p').click()
+        driver.find_element_by_xpath('//*[@id="form"]/div[2]/div[1]/div[19]/label[2]/div[1]/p').click()
+        driver.find_element_by_xpath('//*[@id="form"]/div[2]/div[1]/div[21]/label[2]/div[1]/p').click()
+        driver.find_element_by_xpath('//*[@id="form"]/div[2]/div[1]/div[24]/label[2]/div[1]/p').click()
+        driver.find_element_by_xpath('//*[@id="form"]/div[2]/div[1]/div[26]/label[2]/div[1]/p').click()
+        driver.find_element_by_xpath('//*[@id="form"]/div[2]/div[1]/div[29]/label[5]/div[1]/p').click()
+        if vaccine == '1':
+            driver.find_element_by_xpath('//*[@id="vaccination"]/div[2]/label[2]/div[1]/p').click()
+        elif vaccine=='0':
+            driver.find_element_by_xpath('//*[@id="vaccination"]/div[2]/label[3]/div[1]/p').click()
+        elif vaccine =='2':
+            driver.find_element_by_xpath('//*[@id="vaccination"]/div[2]/label[1]/div[1]/p').click()
 
+        driver.find_element_by_xpath('//*[@id="submit"]').click()
+        driver.get_screenshot_as_file('result.png')
+        time.sleep(1)
+        driver.find_element_by_xpath('//*[@id="cofirmSubmit"]').click()
+        print('OK')
+    except:
+        driver.find_element_by_xpath('//*[@id="submit"]').click()
+        driver.get_screenshot_as_file('result.png')
+        time.sleep(1)
+        driver.find_element_by_xpath('//*[@id="cofirmSubmit"]').click()
+        print('OK')
 
 def login (driver, username, password, vaccine, login_url):
     element = driver.find_element_by_class_name('user-login')
@@ -99,27 +117,31 @@ def login (driver, username, password, vaccine, login_url):
     driver.find_element_by_id('imageCodeName').send_keys(code)
     time.sleep(1)
     driver.find_element_by_class_name('login_circle').click()
-    driver.get_screenshot_as_file('jiemian.png')
+    time.sleep(1)
     try:
-        alertObject = driver.switch_to.alert
-        alertObject.accept()
-    except:
-        pass
-    try:
-        is_hit = driver.find_element_by_class_name('weui_msg_title')
-        if is_hit.text == '您今日已上报成功，无须重复上报，感谢您的配合!':
-            print('今天打过了')
-    except:
         if driver.find_elements_by_class_name('error_icon') == []:
             print('登入成功')
-            fill_select(driver,vaccine)
+            driver.get_screenshot_as_file('jiemian.png')
+            fill_select(driver, vaccine)
+
 
         else:
             print('trying again')
             time.sleep(1)
             driver.get(login_url)
-            login(driver, username, password, login_url)
+            login(driver, username, password, vaccine, login_url)
             time.sleep(1)
+    except:
+        pass
+
+
+
+    try:
+        is_hit = driver.find_element_by_class_name('weui_msg_title')
+        if is_hit.text == '您今日已上报成功，无须重复上报，感谢您的配合!':
+            print('今天打过了')
+    except:
+        pass
 
 
 def main (username, password, vaccine):
@@ -159,7 +181,7 @@ if __name__ == '__main__':
         msg['vaccine'] = vaccine
         with open('./config.json', 'w') as file:
             json.dump(msg, file)
-    main(username, password)
+    main(username, password,vaccine)
     print("\n[Time] %s\n" % datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
     print(" 打卡任务启动 ")
     scheduler = BlockingScheduler()
